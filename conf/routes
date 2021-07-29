@@ -1,0 +1,3 @@
+GET     /                           controllers.HealthCheck.index
+GET     /evaluations                       controllers.api.EvaluationRestController.getAll
+GET     /speaches		    controllers.api.EvaluationRestController.options(id:Option[Long], name:Option[String], transaction:Option[Int])
