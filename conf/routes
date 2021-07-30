@@ -1,2 +1,3 @@
 GET     /                           controllers.HealthCheck.index
 GET     /evaluations                controllers.api.EvaluationRestController.getAll
+GET     /raw-evaluations            controllers.api.EvaluationRestController.getAllRaw

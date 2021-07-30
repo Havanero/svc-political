@@ -1,3 +1,6 @@
+test api:
+
+- sbt test
 
 to start the server:
 

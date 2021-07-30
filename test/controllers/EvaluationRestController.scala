@@ -17,3 +17,17 @@ class HealthCheckApiTest extends PlaySpec with GuiceOneAppPerTest {
     }
   }
 }
+
+
+class RawEvaluations extends PlaySpec with GuiceOneAppPerTest {
+  "RawEvaluations index" should {
+    "return evaluaton json obj" in {
+      val request = FakeRequest(GET, "/raw-evaluations")
+      val rawEvaluations = route(app, request).get
+
+      status(rawEvaluations) mustBe OK
+      contentType(rawEvaluations) mustBe Some("application/json")
+      //TODO: assert again type of object
+    }
+  }
+}

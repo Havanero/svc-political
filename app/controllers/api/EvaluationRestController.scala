@@ -48,6 +48,13 @@ extends AbstractController(cc) {
         Ok(Json.toJson(Summary(mostSpeaches.speaker, mostSecurity.speaker, leastWordy.speaker)))
      }
   }
+
+  def getAllRaw() = Action.async { implicit request: Request[AnyContent] =>
+          evalService.listAllItems map { items =>
+          Ok(Json.toJson(items))
+       }
+    }
+    
   
 }
 
