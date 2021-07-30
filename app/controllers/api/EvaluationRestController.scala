@@ -30,20 +30,22 @@ extends AbstractController(cc) {
         //val mostSpeaches = ll.groupBy(identity).mapValues(_.size).maxBy(_._2)
         //val mostSecurity = items.groupBy(l => l.subject).map(t => (t._1, t._2.length))
 
+        val mostSpeaches = items.groupBy(_.subject).values.map(_.maxBy(_.words)).headOption.get
         val mostSecurity = items.groupBy(_.subject).values.map(_.maxBy(_.words)).filter(_.subject=="Internal Security").headOption.get
-        val mostSpeaches = items.groupBy(_.subject).values.map(_.maxBy(_.words)).filter(_.date=="2013").headOption.getOrElse(null)
-        //val mostSpeaches = items.groupBy(_.speaker).mapValues(_.maxBy(_.worwordsds))
+        if (params.get("date")!=null){
+            val dd = LocalDate.parse(params.get("date").get)
+            val mostSpeaches = items.groupBy(_.subject).values.map(_.maxBy(_.words)).filter(_.date==dd).headOption.getOrElse(null)
+        }
+        val leastWordy = items.groupBy(_.speaker).mapValues(_.minBy(_.words)).toMap.headOption.get._2
         //val max_food = items.groupBy(record => record.words.toInt)
         //val allV = items.collect{ case Evaluation(id,_,_,_,words) => words }.sum
-
+         
         println("--------------")
         println(mostSpeaches)
-        println("sec")
-   //     print(mostSecurity)
-        println("-----------")
-      ////  println(ll)
-    
-       Ok(Json.toJson(Summary(mostSecurity=mostSecurity.speaker)))
+        println(leastWordy)
+
+        Ok(Json.toJson(Summary()))
+        Ok(Json.toJson(Summary(mostSpeaches.speaker, mostSecurity.speaker, leastWordy.speaker)))
      }
   }
   
