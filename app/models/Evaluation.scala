@@ -72,6 +72,18 @@ class EvaluationList @Inject()(
   def listAll: Future[Seq[Evaluation]] = {
     dbConfig.db.run(evaluationList.result)
   }
+
+  def getByName(speaker: String): Future[Option[Evaluation]] = {
+    dbConfig.db.run(evaluationList.filter(_.speaker === speaker).result.headOption)
+  }
+
+
+  def queryByType(queryName: String, parameter: Option[String], parameterValue: Option[String]): Future[Option[Evaluation]] = {
+    print("ruuinning", queryName, parameter)
+    dbConfig.db.run(evaluationList.filter(_.speaker === "Caleb").result.headOption)
+  }
+
+
   var query = TableQuery[EvaluationTableDef]
 
   def getSummary(date: LocalDate)  = {

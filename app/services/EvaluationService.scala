@@ -17,11 +17,18 @@ class EvaluationService @Inject() (items: EvaluationList) {
     items.get(id)
   }
 
+  def getByName(speaker: String): Future[Option[Evaluation]] = {
+    items.getByName(speaker)
+  }
   def listAllItems: Future[Seq[Evaluation]] = {
     items.listAll
   }
 
   def getMost(date: LocalDate)  = {
     items.getSummary(date)
+  }
+
+  def queryByType(queryName: String, parameter: Option[String]=None, parameterValue: Option[String]=None): Future[Option[Evaluation]] = {
+    items.queryByType(queryName, parameter, parameterValue)
   }
 }

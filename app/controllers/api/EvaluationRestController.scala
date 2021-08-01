@@ -12,7 +12,7 @@ import services.EvaluationService
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-case class Summary(mostSpeaches: String =null, mostSecurity: String = null, leastWordy: String = null)
+case class Summary(mostSpeaches: Option[String]=None, mostSecurity: Option[String]=None, leastWordy: Option[String]=None)
 
 @Singleton
 class EvaluationRestController @Inject()(cc: ControllerComponents, evalService: EvaluationService)
@@ -20,40 +20,59 @@ extends AbstractController(cc) {
 
   implicit val evalListJson = Json.format[Evaluation]
   implicit val evalJson = Json.format[Summary]
-  
+  var mostSpeachVar: Option[String]=None 
+  var mostSecVar: Option[String]=None 
+
   def getAll() = Action.async { implicit request: Request[AnyContent] =>
         val params = request.queryString.map { case (k,v) => k -> v.mkString }
         val query=params.get("query")
-        
+        val isQuery = query.exists(_.trim.nonEmpty) 
         evalService.listAllItems map { items =>
-        
-        //val mostSpeaches = ll.groupBy(identity).mapValues(_.size).maxBy(_._2)
-        //val mostSecurity = items.groupBy(l => l.subject).map(t => (t._1, t._2.length))
+          
+        val defaultSpeaches = items groupBy(_.speaker) map { case (k,v) => k -> (v map (_.words) sum)  }
+        val leastWordy=defaultSpeaches.toSeq.sortBy(_._1).last._1
 
-        val mostSpeaches = items.groupBy(_.subject).values.map(_.maxBy(_.words)).headOption.get
-        val mostSecurity = items.groupBy(_.subject).values.map(_.maxBy(_.words)).filter(_.subject=="Internal Security").headOption.get
-        if (params.get("date")!=null){
-            val dd = LocalDate.parse(params.get("date").get)
-            val mostSpeaches = items.groupBy(_.subject).values.map(_.maxBy(_.words)).filter(_.date==dd).headOption.getOrElse(null)
+        val response = isQuery match {
+            case true =>{
+                
+                val isDate = params.get("date").exists(_.trim.nonEmpty)
+                val isSubject = params.get("subject").exists(_.trim.nonEmpty)
+
+                if (isDate){
+                    val parsedDate = params.get("date").get.split("-").headOption.getOrElse("2013")
+                    val byDate = items.filter(f=>f.date.toString.contains(parsedDate))
+                    val topByDate = byDate.groupBy(_.speaker) map { case (k,v) => k -> (v map (_.words) sum)  }
+                    var mostSpeaches =  topByDate.headOption.get._1
+                    mostSpeachVar = Some(mostSpeaches)
+                }
+                if (isSubject){
+                    val parsedSubject = params.get("subject").get
+                    mostSecVar = Some(processMostSecurity(items, parsedSubject))
+                }
+                Summary(mostSpeaches=mostSpeachVar,mostSecurity=mostSecVar,leastWordy=Some(leastWordy))
+                }
+            case default => {
+                val mostSpeaches = defaultSpeaches.headOption.get._1
+                val mostSecurity = processMostSecurity(items, "internal security")
+                Summary(Some(mostSpeaches), Some(mostSecurity), Some(leastWordy))
+                }
         }
-        val leastWordy = items.groupBy(_.speaker).mapValues(_.minBy(_.words)).toMap.headOption.get._2
-        //val max_food = items.groupBy(record => record.words.toInt)
-        //val allV = items.collect{ case Evaluation(id,_,_,_,words) => words }.sum
-         
-        println("--------------")
-        println(mostSpeaches)
-        println(leastWordy)
+        Ok(Json.toJson(response))
+        }  
 
-        Ok(Json.toJson(Summary()))
-        Ok(Json.toJson(Summary(mostSpeaches.speaker, mostSecurity.speaker, leastWordy.speaker)))
-     }
   }
-
   def getAllRaw() = Action.async { implicit request: Request[AnyContent] =>
           evalService.listAllItems map { items =>
           Ok(Json.toJson(items))
        }
     }
+
+  def processMostSecurity(items: Seq[Evaluation], subject: String)={
+     val bySubject = items.filter(f=>f.subject.toLowerCase.contains(subject.toLowerCase))
+     println("subject" + subject)
+     val topBySubject = bySubject groupBy(_.speaker) map { case (k,v) => k -> (v map (_.words) sum)  }
+     topBySubject.last._1
+  }
     
   
 }
