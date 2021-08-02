@@ -1,0 +1,19 @@
+version: '3'
+services:
+  postgres:
+    image: "postgres"
+    environment:
+      - POSTGRES_PASSWORD=""
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - RDS_HOST= localhost 
+      - RDS_PORT=5432
+    network_mode: host
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile  
+    environment:   
+      - DEBUG=true
+    ports:
+     - "9000:9000"   
+    network_mode: host
